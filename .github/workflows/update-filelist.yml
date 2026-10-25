@@ -1,0 +1,71 @@
+# 自动生成课件清单 files.json
+#
+# 每次向 main 分支推送（包括上传课件）后自动运行：
+# 扫描仓库里所有顶层文件夹，把支持的课件文件（html/ppt/pptx/pdf/doc/docx）
+# 的名字和大小写入 files.json 并提交回仓库。
+# 网站读取这份清单显示课件列表——不需要访问 GitHub 接口，
+# 不受网络环境影响，新课件推送后约 1-2 分钟内出现。
+#
+# 维护注意：教师名单不需要在这里维护（自动扫描所有文件夹）；
+# 网站展示哪些教师由 js/app.js 里的 CONFIG.teachers 决定。
+
+name: update-filelist
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-list:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 生成 files.json
+        run: |
+          python3 << 'EOF'
+          import json, os, time
+
+          EXT_OK = {'.html', '.ppt', '.pptx', '.pdf', '.doc', '.docx'}
+          SKIP_DIRS = {'.git', '.github'}
+
+          out = {
+              'generated_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+              'teachers': {}
+          }
+          for entry in sorted(os.listdir('.')):
+              if entry.startswith('.') or entry in SKIP_DIRS:
+                  continue
+              path = os.path.join('.', entry)
+              if not os.path.isdir(path):
+                  continue
+              files = []
+              for name in sorted(os.listdir(path)):
+                  p = os.path.join(path, name)
+                  ext = os.path.splitext(name)[1].lower()
+                  if os.path.isfile(p) and ext in EXT_OK:
+                      files.append({'name': name, 'size': os.path.getsize(p)})
+              if files:  # 只有含课件的文件夹才写进清单
+                  out['teachers'][entry] = files
+
+          with open('files.json', 'w', encoding='utf-8') as f:
+              json.dump(out, f, ensure_ascii=False, indent=2)
+          print('已生成 files.json：', list(out['teachers'].keys()))
+          EOF
+
+      - name: 提交 files.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet files.json; then
+            echo "files.json 没有变化，跳过提交"
+          else
+            git add files.json
+            git commit -m "chore: 更新课件清单 files.json [skip ci]"
+            git push origin HEAD:main
+            echo "files.json 已提交"
+          fi
