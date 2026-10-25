@@ -314,6 +314,11 @@ h2 .en{
   margin-top:12px; font-size:13px; line-height:1.9;
   color:var(--faint); letter-spacing:.04em;
 }
+.state .state-link{
+  color:var(--muted); text-decoration:underline; text-underline-offset:4px;
+  transition:color .3s var(--ease);
+}
+.state .state-link:hover{ color:var(--ink); }
 .is-loading{ animation:pulse 1.6s ease-in-out infinite; }
 @keyframes pulse{
   0%,100%{ opacity:.35; }

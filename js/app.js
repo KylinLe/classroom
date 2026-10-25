@@ -11,6 +11,7 @@
 var CONFIG = {
   /* GitHub 仓库（换仓库只改这里） */
   repo: { owner: 'KylinLe', name: 'classroom' },
+  branch: 'main',
 
   /* 访问密码的 SHA-256 哈希。
      改密码：在终端运行  printf '新密码' | shasum -a 256
@@ -139,22 +140,30 @@ function fileHref(teacher, name) {
   return teacher + '/' + encodeURIComponent(name);
 }
 
-/* ==================== GitHub 文件列表 ==================== */
+/* ==================== 文件列表读取 ==================== */
 
-/* 读取某教师文件夹里的课件，返回 Promise<Array>
-   每个元素：{ name 展示名, ext, size, badge, action, label } */
-function fetchTeacherFiles(teacher, force) {
-  var cacheKey = 'cp_files_' + teacher;
+/* 把一条原始文件记录转成课件条目；格式不支持返回 null */
+function makeFile(displayName, size) {
+  var ext = fileExt(displayName);
+  var type = CONFIG.fileTypes[ext];
+  if (!type) return null;
+  return {
+    name: displayName,
+    ext: ext,
+    size: size,
+    badge: type.badge,
+    action: type.action,
+    label: type.label
+  };
+}
 
-  if (!force) {
-    try {
-      var cached = JSON.parse(sessionStorage.getItem(cacheKey));
-      if (cached && (Date.now() - cached.ts) < CONFIG.apiCacheMs) {
-        return Promise.resolve(cached.files);
-      }
-    } catch (e) { /* 缓存损坏则忽略，重新读取 */ }
-  }
+function sortFiles(files) {
+  files.sort(function (a, b) { return a.name.localeCompare(b.name, 'zh-CN'); });
+  return files;
+}
 
+/* 主通道：GitHub Contents API（新上传的课件立刻可见） */
+function fetchFromGitHub(teacher) {
   var api = 'https://api.github.com/repos/' +
             CONFIG.repo.owner + '/' + CONFIG.repo.name +
             '/contents/' + encodeURIComponent(teacher);
@@ -162,36 +171,86 @@ function fetchTeacherFiles(teacher, force) {
   return fetch(api)
     .then(function (res) {
       if (res.status === 404) return []; /* 文件夹还没上传过课件 -> 视为空 */
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      if (!res.ok) {
+        var e = new Error('HTTP ' + res.status);
+        e.code = (res.status === 403) ? 'rate' : 'http'; /* 403 多为匿名限流 */
+        throw e;
+      }
       return res.json();
     })
     .then(function (items) {
       if (!Array.isArray(items)) return [];
-
       var files = [];
       items.forEach(function (it) {
         if (it.type !== 'file') return; /* 忽略子文件夹与其他条目 */
-        var name = decodeName(it.name);
-        var ext = fileExt(name);
-        var type = CONFIG.fileTypes[ext];
-        if (!type) return; /* 忽略不支持的格式 */
-        files.push({
-          name: name,
-          ext: ext,
-          size: it.size,
-          badge: type.badge,
-          action: type.action,
-          label: type.label
-        });
+        var f = makeFile(decodeName(it.name), it.size);
+        if (f) files.push(f);
       });
+      return sortFiles(files);
+    });
+}
 
-      files.sort(function (a, b) { return a.name.localeCompare(b.name, 'zh-CN'); });
+/* 备用通道：jsDelivr CDN 数据接口（GitHub 接口连不上时使用）。
+   注意：CDN 有缓存，新上传的课件可能要过一段时间才在这里出现。 */
+function fetchFromJsdelivr(teacher) {
+  var api = 'https://data.jsdelivr.com/v1/package/gh/' +
+            CONFIG.repo.owner + '/' + CONFIG.repo.name + '@' + CONFIG.branch + '/flat';
 
-      try {
-        sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), files: files }));
-      } catch (e) { /* 存不进缓存（如隐私模式）不影响使用 */ }
+  return fetch(api)
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function (data) {
+      var prefix = '/' + teacher + '/';
+      var files = [];
+      (data.files || []).forEach(function (it) {
+        if (it.name.indexOf(prefix) !== 0) return;
+        var rest = it.name.slice(prefix.length);
+        if (rest.indexOf('/') !== -1) return; /* 只取文件夹顶层，与主通道行为一致 */
+        var f = makeFile(decodeName(rest), it.size);
+        if (f) files.push(f);
+      });
+      return sortFiles(files);
+    });
+}
 
+function readFilesCache(teacher) {
+  try {
+    return JSON.parse(sessionStorage.getItem('cp_files_' + teacher)) || null;
+  } catch (e) { return null; } /* 缓存损坏则忽略 */
+}
+
+function writeFilesCache(teacher, files) {
+  try {
+    sessionStorage.setItem('cp_files_' + teacher,
+      JSON.stringify({ ts: Date.now(), files: files }));
+  } catch (e) { /* 存不进缓存（如隐私模式）不影响使用 */ }
+}
+
+/* 读取某教师文件夹里的课件，返回 Promise<Array>
+   每个元素：{ name 展示名, ext, size, badge, action, label }
+   读取顺序：会话缓存 -> GitHub 接口 -> jsDelivr 备用接口 -> 过期缓存兜底 */
+function fetchTeacherFiles(teacher, force) {
+  var cached = readFilesCache(teacher);
+  if (!force && cached && (Date.now() - cached.ts) < CONFIG.apiCacheMs) {
+    return Promise.resolve(cached.files);
+  }
+
+  return fetchFromGitHub(teacher)
+    .catch(function (firstErr) {
+      /* 主通道失败 -> 尝试备用通道；备用也失败则抛主通道错误用于提示 */
+      return fetchFromJsdelivr(teacher).catch(function () {
+        throw firstErr;
+      });
+    })
+    .then(function (files) {
+      writeFilesCache(teacher, files);
       return files;
+    })
+    .catch(function (err) {
+      if (cached) return cached.files; /* 有旧缓存就先显示旧列表，不报错 */
+      throw err;
     });
 }
 
@@ -365,13 +424,21 @@ function initSpacePage() {
     count.textContent = files.length + ' 个课件';
   }
 
-  function renderError() {
+  function renderError(err) {
     list.classList.remove('is-loading');
+    /* 按原因给出不同的提示文案 */
+    var reason = (err && err.code === 'rate') ? 'rate' : 'net';
+    var msg = reason === 'rate'
+      ? '访问 GitHub 的次数超过限制（每小时 60 次），请过一会儿再试'
+      : '无法连接课件文件接口，可能是网络问题';
+    var ghLink = 'https://github.com/' + CONFIG.repo.owner + '/' + CONFIG.repo.name +
+                 '/tree/' + CONFIG.branch + '/' + teacher;
     list.innerHTML =
       '<div class="state">' +
         '<div class="state-en">Something Went Wrong</div>' +
-        '<div class="state-cn">课件列表读取失败，请稍后重试</div>' +
-        '<div class="state-hint">可以点右上角「刷新」再试一次。</div>' +
+        '<div class="state-cn">课件列表读取失败：' + msg + '</div>' +
+        '<div class="state-hint">可以点右上角「刷新」再试一次，或直接到<br>' +
+          '<a class="state-link" href="' + ghLink + '" target="_blank" rel="noopener">GitHub 上的 ' + teacher + ' 文件夹</a>查看课件。</div>' +
       '</div>';
     count.textContent = '';
   }

@@ -44,11 +44,14 @@ classplatform/
 - **改密码**：终端运行 `printf '新密码' | shasum -a 256`，把输出替换到 `CONFIG.passwordHash`。
 - **注意**：纯前端校验挡不住懂技术的人（哈希和逻辑都在源码里）。对社团上课平台够用，但不是真正的安全。
 
-### 2. 文件自动识别（GitHub Contents API）
+### 2. 文件自动识别（双通道读取）
 
-- `space.html` 通过 GitHub 接口实时读取仓库对应文件夹：
-  `https://api.github.com/repos/KylinLe/classroom/contents/<教师账号>`
-- **无需维护文件清单**：往教师文件夹里放课件并上传到 GitHub（main 分支）后，网页列表自动出现；文件夹为空或不存在（接口 404）时显示「暂无课件」。
+- `space.html` 实时读取仓库对应教师文件夹，**无需维护文件清单**：往教师文件夹里放课件并上传到 GitHub（main 分支）后，网页列表自动出现；文件夹为空或不存在时显示「暂无课件」。
+- 读取顺序（`fetchTeacherFiles`）：
+  1. `sessionStorage` 会话缓存（5 分钟内直接命中，不发请求）；
+  2. **主通道**：GitHub Contents API `https://api.github.com/repos/KylinLe/classroom/contents/<教师账号>`（新课件立刻可见）；
+  3. **备用通道**：GitHub 接口连不上时，自动改用 jsDelivr CDN 数据接口 `https://data.jsdelivr.com/v1/package/gh/...@main/flat`（国内访问通常更稳定，但 CDN 有缓存，新上传的课件可能要过一段时间才出现）；
+  4. 两个通道都失败但有旧缓存时，先显示旧列表兜底；都失败且无缓存才报错，错误提示会写明原因（限流 / 网络）并附直达 GitHub 文件夹的链接。
 - 支持格式与行为：
 
   | 扩展名 | 图标 | 点击行为 |
@@ -59,12 +62,12 @@ classplatform/
   | doc / docx | DOC / DOCX | 直接下载 |
 
 - 下载走本站相对路径（如 `hw/课件.pptx`）并带 `download` 属性，中文文件名正常保留。
-- **限流**：GitHub 匿名接口每 IP 每小时 60 次。已做两层防护：按教师文件夹缓存到 `sessionStorage`（5 分钟），页面上有「刷新」按钮强制重新读取。正常上课不会触顶。
+- **限流**：GitHub 匿名接口每 IP 每小时 60 次（403 时错误提示会说明）。已做两层防护：按教师文件夹缓存到 `sessionStorage`（5 分钟），页面上有「刷新」按钮强制重新读取。正常上课不会触顶。
 - **限制**：只识别教师文件夹**顶层**的文件，不支持子文件夹；其他格式（图片等）会被忽略。
 
 ### 3. 配置（维护时只改 `js/app.js` 顶部的 CONFIG）
 
-- `repo`：GitHub 仓库（换仓库只改这里）。
+- `repo` / `branch`：GitHub 仓库与默认分支（换仓库只改这里）。
 - `passwordHash`：密码哈希（改法见上）。
 - `teachers`：教师账号数组，与仓库中同名文件夹一一对应；增删教师需同步增删文件夹。
 - `fileTypes`：支持的文件格式与图标。
@@ -93,6 +96,7 @@ classplatform/
 ## 已知限制
 
 - 密码门是「挡路人」级别，不是安全机制；仓库公开时课件在 GitHub 上本身可见。
-- 匿名接口限流 60 次/小时/IP（有缓存兜底）。
+- 匿名接口限流 60 次/小时/IP（有缓存兜底，触顶时有明确提示）。
+- 个别网络环境访问 `api.github.com` 不畅，此时走 jsDelivr 备用通道，新课件可能出现延迟。
 - 教师文件夹内不支持子文件夹。
 - 空文件夹在 git 中不存在：新教师文件夹里至少放一个课件后，接口才能读到它。
