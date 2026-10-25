@@ -1,7 +1,11 @@
 {
-  "generated_at": "2026-10-25T17:17:41Z",
+  "generated_at": "2026-10-25T17:35:02Z",
   "teachers": {
     "hw": [
+      {
+        "name": "index.html",
+        "size": 22079
+      },
       {
         "name": "test.html",
         "size": 22079
@@ -13,11 +17,19 @@
         "size": 22079
       },
       {
+        "name": "摄影社签到表.pdf",
+        "size": 303017
+      },
+      {
         "name": "第一节课.html",
         "size": 37528
       }
     ],
     "lzy": [
+      {
+        "name": "index.html",
+        "size": 22079
+      },
       {
         "name": "test.html",
         "size": 22079
@@ -25,11 +37,19 @@
     ],
     "swh": [
       {
+        "name": "index.html",
+        "size": 22079
+      },
+      {
         "name": "test.html",
         "size": 22079
       }
     ],
     "yyz": [
+      {
+        "name": "index.html",
+        "size": 22079
+      },
       {
         "name": "test.html",
         "size": 22079
