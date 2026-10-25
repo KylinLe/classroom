@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-10-25T17:17:41Z",
+  "teachers": {
+    "hw": [
+      {
+        "name": "test.html",
+        "size": 22079
+      }
+    ],
+    "lxn": [
+      {
+        "name": "test.html",
+        "size": 22079
+      },
+      {
+        "name": "第一节课.html",
+        "size": 37528
+      }
+    ],
+    "lzy": [
+      {
+        "name": "test.html",
+        "size": 22079
+      }
+    ],
+    "swh": [
+      {
+        "name": "test.html",
+        "size": 22079
+      }
+    ],
+    "yyz": [
+      {
+        "name": "test.html",
+        "size": 22079
+      }
+    ]
+  }
+}

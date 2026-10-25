@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>普陀中学摄影社 — 留住光</title>
+<meta name="description" content="普陀中学摄影社 2026 招新。零基础可加入，每周二下午，不见不散。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='5'%3E%3Ccircle cx='50' cy='50' r='42'/%3E%3Cpath d='M50 26 L71 38 L71 62 L50 74 L29 62 L29 38 Z'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   普陀中学摄影社 — 单文件站点
+   设计系统：细线 / 黑白 / 字距 / 六边形光孔
+   ============================================================ */
+
+:root{
+  --ink:#0f0f0f;
+  --paper:#ffffff;
+  --muted:#6e6e73;
+  --faint:#a1a1a6;
+  --line:#e3e3e5;
+
+  --pad: clamp(20px, 5vw, 64px);
+  --maxw: 1180px;
+
+  --ease: cubic-bezier(.22,.61,.24,1);
+}
+
+*,*::before,*::after{ margin:0; padding:0; box-sizing:border-box; }
+
+html{
+  -webkit-text-size-adjust:100%;
+  scroll-behavior:smooth;
+}
+section[id]{ scroll-margin-top:64px; }
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC",
+              "Helvetica Neue", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size:16px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+
+::selection{ background:var(--ink); color:var(--paper); }
+
+a{ color:inherit; text-decoration:none; }
+img{ display:block; max-width:100%; }
+
+/* ---------- 通用容器 ---------- */
+.wrap{
+  width:100%;
+  max-width:var(--maxw);
+  margin:0 auto;
+  padding:0 var(--pad);
+}
+
+/* ---------- 顶部导航 ---------- */
+.nav{
+  position:fixed; inset:0 0 auto 0; z-index:100;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:saturate(180%) blur(14px);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid transparent;
+  transition:border-color .4s var(--ease), background .4s var(--ease);
+}
+.nav.is-scrolled{ border-bottom-color:var(--line); }
+
+.nav-inner{
+  max-width:var(--maxw); margin:0 auto;
+  padding:0 var(--pad);
+  height:64px;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+}
+
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand svg{ width:26px; height:26px; flex:0 0 auto; }
+.brand .name{
+  font-size:14px; font-weight:600; letter-spacing:.14em;
+}
+.brand .sub{
+  display:block; font-size:8.5px; letter-spacing:.24em;
+  color:var(--faint); text-transform:uppercase; margin-top:3px; font-weight:500;
+}
+
+.nav-links{ display:flex; gap:clamp(18px,2.4vw,36px); }
+.nav-links a{
+  font-size:13px; letter-spacing:.14em; color:var(--muted);
+  padding:6px 0; position:relative; transition:color .3s var(--ease);
+}
+.nav-links a::after{
+  content:""; position:absolute; left:0; bottom:0;
+  width:100%; height:1px; background:var(--ink);
+  transform:scaleX(0); transform-origin:right;
+  transition:transform .45s var(--ease);
+}
+.nav-links a:hover{ color:var(--ink); }
+.nav-links a:hover::after{ transform:scaleX(1); transform-origin:left; }
+
+.menu-btn{
+  display:none; width:40px; height:40px; margin-right:-8px;
+  background:none; border:0; cursor:pointer; position:relative;
+}
+.menu-btn span{
+  position:absolute; left:10px; width:20px; height:1px; background:var(--ink);
+  transition:transform .4s var(--ease), opacity .3s var(--ease);
+}
+.menu-btn span:nth-child(1){ top:16px; }
+.menu-btn span:nth-child(2){ top:23px; }
+.menu-btn[aria-expanded="true"] span:nth-child(1){ transform:translateY(3.5px) rotate(45deg); }
+.menu-btn[aria-expanded="true"] span:nth-child(2){ transform:translateY(-3.5px) rotate(-45deg); }
+
+.mobile-menu{
+  display:none; border-top:1px solid var(--line); background:var(--paper);
+}
+.mobile-menu a{
+  display:block; padding:16px var(--pad);
+  font-size:15px; letter-spacing:.12em;
+  border-bottom:1px solid var(--line);
+}
+.mobile-menu.is-open{ display:block; }
+
+/* ---------- 首屏 ---------- */
+.hero{
+  padding-top:clamp(120px, 17vh, 190px);
+  padding-bottom:clamp(64px, 10vh, 120px);
+  position:relative;
+}
+.hero-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:clamp(24px, 5vw, 72px);
+}
+
+.eyebrow{
+  font-size:11px; letter-spacing:.42em; text-transform:uppercase;
+  color:var(--muted); font-weight:600; padding-left:.42em;
+  margin-bottom:clamp(20px,3vw,32px);
+}
+
+h1{
+  font-size:clamp(64px, 13.5vw, 168px);
+  line-height:.92;
+  letter-spacing:-.035em;
+  font-weight:600;
+  margin-left:-.02em;
+}
+
+.hero-en{
+  margin-top:clamp(16px,2.4vw,26px);
+  font-size:clamp(11px,1.3vw,13px);
+  letter-spacing:.34em; text-transform:uppercase;
+  color:var(--faint); font-weight:500;
+}
+
+.hero-desc{
+  margin-top:clamp(28px,4vw,44px);
+  font-size:clamp(15px,1.6vw,18px);
+  line-height:1.95; color:var(--muted);
+  max-width:26em;
+}
+.hero-desc strong{ color:var(--ink); font-weight:600; }
+
+/* 光孔图形 */
+.aperture{
+  width:clamp(200px, 26vw, 340px);
+  height:clamp(200px, 26vw, 340px);
+  flex:0 0 auto;
+  color:var(--ink);
+  will-change:transform;
+}
+.aperture svg{ width:100%; height:100%; display:block; }
+
+/* ---------- 分节 ---------- */
+.sec{
+  padding:clamp(72px, 11vw, 132px) 0;
+  border-top:1px solid var(--line);
+}
+.sec-head{
+  display:grid;
+  grid-template-columns:clamp(48px,6vw,88px) minmax(0,1fr);
+  gap:clamp(16px,3vw,40px);
+  align-items:start;
+  margin-bottom:clamp(40px,6vw,72px);
+}
+.sec-num{
+  font-size:11px; letter-spacing:.2em; color:var(--faint);
+  font-weight:600; padding-top:.55em;
+}
+h2{
+  font-size:clamp(30px, 4.4vw, 52px);
+  line-height:1.08;
+  letter-spacing:-.025em;
+  font-weight:600;
+}
+h2 .en{
+  display:block; margin-top:14px;
+  font-size:11px; letter-spacing:.34em; text-transform:uppercase;
+  color:var(--faint); font-weight:500;
+}
+
+.sec-body{
+  display:grid;
+  grid-template-columns:clamp(48px,6vw,88px) minmax(0,1fr);
+  gap:clamp(16px,3vw,40px);
+}
+.sec-body > .content{ max-width:none; }
+.content p{ max-width:38em; }
+
+p{ color:var(--muted); }
+
+/* 课程 —— 两栏 */
+.courses{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0;
+  border-top:1px solid var(--ink);
+}
+.course{ padding:clamp(24px,3vw,36px) clamp(20px,3vw,40px) clamp(32px,4vw,48px) 0; }
+.course + .course{ border-left:1px solid var(--line); padding-left:clamp(20px,3vw,40px); }
+.course .idx{ font-size:11px; letter-spacing:.2em; color:var(--faint); }
+.course h3{
+  font-size:clamp(22px,2.8vw,30px); font-weight:600;
+  letter-spacing:-.015em; margin-top:14px;
+}
+.course .en{
+  display:block; margin-top:8px; font-size:10px; letter-spacing:.26em;
+  text-transform:uppercase; color:var(--faint);
+}
+.course p{ margin-top:18px; font-size:15px; line-height:1.9; max-width:24em; }
+
+/* 任务与活动 —— 列表 */
+.list{ border-top:1px solid var(--ink); }
+.list-item{
+  display:grid;
+  grid-template-columns:clamp(40px,6vw,80px) minmax(0,1.1fr) minmax(0,1.4fr);
+  gap:clamp(12px,3vw,32px);
+  align-items:baseline;
+  padding:clamp(20px,2.6vw,30px) 0;
+  border-bottom:1px solid var(--line);
+  transition:padding-left .45s var(--ease);
+}
+.list-item:hover{ padding-left:10px; }
+.list-item .n{ font-size:11px; letter-spacing:.18em; color:var(--faint); }
+.list-item .t{ font-size:clamp(17px,2vw,21px); font-weight:600; letter-spacing:-.01em; }
+.list-item .d{ font-size:14.5px; line-height:1.85; color:var(--muted); }
+
+/* ---------- 招新（反白） ---------- */
+.join{
+  background:var(--ink); color:var(--paper);
+  padding:clamp(80px,12vw,140px) 0;
+}
+.join .sec-num{ color:#6c6c72; }
+.join h2{ color:var(--paper); }
+.join .en{ color:#8b8b91; }
+.join-inner{
+  display:grid; grid-template-columns:minmax(0,1fr) auto;
+  gap:clamp(32px,6vw,80px); align-items:end;
+}
+.join-big{
+  font-size:clamp(40px,7vw,84px);
+  line-height:1.02; letter-spacing:-.03em; font-weight:600;
+  margin-top:clamp(20px,3vw,32px);
+}
+.join-big .dim{ color:#75757c; }
+.join-en{
+  margin-top:20px; font-size:11px; letter-spacing:.34em;
+  text-transform:uppercase; color:#8b8b91;
+}
+.join-meta{
+  margin-top:clamp(32px,5vw,48px);
+  display:flex; gap:clamp(28px,5vw,64px); flex-wrap:wrap;
+  border-top:1px solid #2a2a2e; padding-top:24px;
+}
+.join-meta .k{ font-size:10px; letter-spacing:.2em; color:#6c6c72; margin-bottom:10px; }
+.join-meta .v{ font-size:15px; letter-spacing:.02em; }
+
+.join-mark{ width:clamp(120px,16vw,200px); opacity:.9; }
+.join-mark svg{ width:100%; height:auto; display:block; }
+
+/* ---------- 页脚 ---------- */
+.foot{
+  padding:clamp(48px,7vw,72px) 0 clamp(40px,6vw,64px);
+  border-top:1px solid var(--line);
+}
+.foot-inner{
+  display:flex; justify-content:space-between; align-items:flex-end; gap:32px; flex-wrap:wrap;
+}
+.foot .brand .name{ font-size:13px; }
+.foot .legal{
+  text-align:right; font-size:12px; letter-spacing:.08em;
+  color:var(--faint); line-height:1.9;
+}
+
+/* ---------- 滚动显现 ---------- */
+.reveal{
+  opacity:0; transform:translateY(22px);
+  transition:opacity .9s var(--ease), transform .9s var(--ease);
+}
+.reveal.is-in{ opacity:1; transform:none; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 900px){
+  .hero-grid{ grid-template-columns:1fr; }
+  .aperture{ width:clamp(150px,40vw,220px); height:clamp(150px,40vw,220px); order:-1; margin-bottom:8px; }
+  .courses{ grid-template-columns:1fr; }
+  .course + .course{ border-left:0; border-top:1px solid var(--line); padding-left:0; }
+  .join-inner{ grid-template-columns:1fr; }
+  .join-mark{ display:none; }
+}
+
+@media (max-width: 720px){
+  .nav-links{ display:none; }
+  .join-meta{ flex-direction:column; gap:20px; }
+  .join-meta > div{ display:flex; align-items:baseline; gap:14px; }
+  .join-meta .k{ margin-bottom:0; min-width:64px; }
+  .menu-btn{ display:block; }
+  .sec-head,.sec-body{ grid-template-columns:1fr; gap:14px; }
+  .sec-num{ padding-top:0; }
+  .list-item{ grid-template-columns:40px minmax(0,1fr); }
+  .list-item .d{ grid-column:2; }
+  .foot-inner{ flex-direction:column; align-items:flex-start; }
+  .foot .legal{ text-align:left; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  *,*::before,*::after{ animation:none !important; transition:none !important; }
+  .reveal{ opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================= 导航 ================= -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="返回顶部">
+      <svg viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="7" aria-hidden="true">
+        <circle cx="200" cy="200" r="170"/>
+        <path d="M300 200 L250 286.6 L150 286.6 L100 200 L150 113.4 L250 113.4 Z"/>
+      </svg>
+      <span>
+        <span class="name">普陀中学摄影社</span>
+        <span class="sub">Putuo Photography Club</span>
+      </span>
+    </a>
+
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#courses">课程</a>
+      <a href="#missions">任务</a>
+      <a href="#join">招新</a>
+    </nav>
+
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-label="打开菜单">
+      <span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#courses">课程</a>
+    <a href="#missions">任务</a>
+    <a href="#join">招新</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ================= 首屏 ================= -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">Putuo Photography Club</div>
+          <h1>留住光</h1>
+          <div class="hero-en">Catch the Light</div>
+          <p class="hero-desc">
+            有些瞬间只发生一次。<br>
+            <strong>快门，是唯一的挽留。</strong>
+          </p>
+        </div>
+
+        <div class="aperture" id="aperture" aria-hidden="true">
+          <svg viewBox="0 0 400 400" fill="none" stroke="currentColor">
+            <g transform="translate(0,14)">
+              <circle cx="200" cy="200" r="170" stroke-width="2.4"/>
+              <circle cx="200" cy="200" r="162" stroke-width="1"/>
+              <line x1="361" y1="200" x2="344" y2="200" stroke-width="1.6"/>
+              <line x1="280.5" y1="339.43" x2="272" y2="324.71" stroke-width="1.6"/>
+              <line x1="119.5" y1="339.43" x2="128" y2="324.71" stroke-width="1.6"/>
+              <line x1="39" y1="200" x2="56" y2="200" stroke-width="1.6"/>
+              <line x1="119.5" y1="60.57" x2="128" y2="75.29" stroke-width="1.6"/>
+              <line x1="280.5" y1="60.57" x2="272" y2="75.29" stroke-width="1.6"/>
+              <path d="M300 200 L250 286.6 L150 286.6 L100 200 L150 113.4 L250 113.4 Z" stroke-width="2"/>
+              <circle cx="300" cy="200" r="4" stroke-width="1.4" fill="#fff"/>
+              <circle cx="250" cy="286.6" r="4" stroke-width="1.4" fill="#fff"/>
+              <circle cx="150" cy="286.6" r="4" stroke-width="1.4" fill="#fff"/>
+              <circle cx="100" cy="200" r="4" stroke-width="1.4" fill="#fff"/>
+              <circle cx="150" cy="113.4" r="4" stroke-width="1.4" fill="#fff"/>
+              <circle cx="250" cy="113.4" r="4" stroke-width="1.4" fill="#fff"/>
+              <line x1="200" y1="2" x2="200" y2="22" stroke-width="2.4"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 01 课程 ================= -->
+  <section class="sec" id="courses">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-num">01</div>
+        <h2>我们教什么<span class="en">Courses</span></h2>
+      </div>
+
+      <div class="sec-body">
+        <div></div>
+        <div class="content">
+          <div class="courses reveal">
+            <div class="course">
+              <div class="idx">A</div>
+              <h3>基础课</h3>
+              <span class="en">Foundation</span>
+              <p>构图、曝光、光线。<br>从按下第一次快门开始，把画面拍清楚。</p>
+            </div>
+            <div class="course">
+              <div class="idx">B</div>
+              <h3>提升课</h3>
+              <span class="en">Advanced</span>
+              <p>后期、组照、专题。<br>从「拍到了」走到「拍好了」。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 02 任务与活动 ================= -->
+  <section class="sec" id="missions">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-num">02</div>
+        <h2>我们在拍什么<span class="en">Missions &amp; Events</span></h2>
+      </div>
+
+      <div class="sec-body">
+        <div></div>
+        <div class="content">
+          <div class="list reveal">
+            <div class="list-item">
+              <div class="n">01</div>
+              <div class="t">元旦汇演</div>
+              <div class="d">台下第一排的位置，永远留给摄影社。</div>
+            </div>
+            <div class="list-item">
+              <div class="n">02</div>
+              <div class="t">三独比赛</div>
+              <div class="d">独唱、独舞、独奏。灯亮起的前一秒，最好看。</div>
+            </div>
+            <div class="list-item">
+              <div class="n">03</div>
+              <div class="t">校园日常</div>
+              <div class="d">走廊、操场、黄昏。没人安排，但值得记录。</div>
+            </div>
+            <div class="list-item">
+              <div class="n">04</div>
+              <div class="t">外拍</div>
+              <div class="d">走出校门，用一整个下午只拍一个主题。</div>
+            </div>
+            <div class="list-item">
+              <div class="n">05</div>
+              <div class="t">作品鉴赏</div>
+              <div class="d">把照片摊在桌上，一起说哪一张真的打动了人。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 招新 ================= -->
+  <section class="sec join" id="join">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-num">03</div>
+        <h2>招新<span class="en">Join Us</span></h2>
+      </div>
+
+      <div class="join-inner">
+        <div class="reveal">
+          <div class="join-big">
+            每周二下午<br>
+            <span class="dim">不见不散</span>
+          </div>
+          <div class="join-en">See you there every Tuesday afternoon</div>
+
+          <div class="join-meta">
+            <div>
+              <div class="k">招募对象</div>
+              <div class="v">高一 · 高二</div>
+            </div>
+            <div>
+              <div class="k">基础要求</div>
+              <div class="v">零基础</div>
+            </div>
+            <div>
+              <div class="k">设备</div>
+              <div class="v">学生自带 · 不限种类</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="join-mark reveal" aria-hidden="true">
+          <svg viewBox="0 0 400 400" fill="none" stroke="currentColor">
+            <g transform="translate(0,14)">
+              <circle cx="200" cy="200" r="170" stroke-width="3"/>
+              <circle cx="200" cy="200" r="162" stroke-width="1.2"/>
+              <path d="M300 200 L250 286.6 L150 286.6 L100 200 L150 113.4 L250 113.4 Z" stroke-width="2.6"/>
+              <circle cx="300" cy="200" r="5" stroke-width="2"/>
+              <circle cx="250" cy="286.6" r="5" stroke-width="2"/>
+              <circle cx="150" cy="286.6" r="5" stroke-width="2"/>
+              <circle cx="100" cy="200" r="5" stroke-width="2"/>
+              <circle cx="150" cy="113.4" r="5" stroke-width="2"/>
+              <circle cx="250" cy="113.4" r="5" stroke-width="2"/>
+              <line x1="200" y1="2" x2="200" y2="22" stroke-width="3"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="7" aria-hidden="true">
+        <circle cx="200" cy="200" r="170"/>
+        <path d="M300 200 L250 286.6 L150 286.6 L100 200 L150 113.4 L250 113.4 Z"/>
+      </svg>
+      <span>
+        <span class="name">普陀中学摄影社</span>
+        <span class="sub">Putuo Photography Club</span>
+      </span>
+    </a>
+    <div class="legal">
+      ©️ Copyright 乐轩宁 of 普陀中学摄影社
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 1. 导航滚动状态 ---------- */
+  var nav = document.getElementById('nav');
+  var lastY = -1;
+  function onScrollNav() {
+    var y = window.scrollY || window.pageYOffset;
+    if (y === lastY) return;
+    lastY = y;
+    nav.classList.toggle('is-scrolled', y > 8);
+  }
+
+  /* ---------- 2. 光孔随滚动缓慢转动（对焦感） ---------- */
+  var aperture = document.getElementById('aperture');
+  function onScrollAperture() {
+    if (!aperture || reduce) return;
+    var y = window.scrollY || window.pageYOffset;
+    var rot = Math.min(y * 0.06, 36);
+    aperture.style.transform = 'rotate(' + rot.toFixed(2) + 'deg)';
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(function () {
+      onScrollNav();
+      onScrollAperture();
+      ticking = false;
+    });
+  }, { passive: true });
+  onScrollNav();
+  onScrollAperture();
+
+  /* ---------- 3. 滚动显现 ---------- */
+  var items = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+
+  if (reduce || !('IntersectionObserver' in window)) {
+    items.forEach(function (el) { el.classList.add('is-in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        // 同组元素依次入场
+        var siblings = Array.prototype.slice.call(
+          el.parentNode.querySelectorAll(':scope > .reveal')
+        );
+        var i = Math.max(siblings.indexOf(el), 0);
+        el.style.transitionDelay = Math.min(i * 70, 350) + 'ms';
+        el.classList.add('is-in');
+        io.unobserve(el);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+    items.forEach(function (el) { io.observe(el); });
+  }
+
+  /* ---------- 4. 移动端菜单 ---------- */
+  var btn = document.getElementById('menuBtn');
+  var menu = document.getElementById('mobileMenu');
+
+  function closeMenu() {
+    btn.setAttribute('aria-expanded', 'false');
+    menu.classList.remove('is-open');
+  }
+
+  btn.addEventListener('click', function () {
+    var open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    menu.classList.toggle('is-open', !open);
+  });
+
+  menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') closeMenu();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeMenu();
+  });
+
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 720) closeMenu();
+  });
+
+  /* ---------- 5. 锚点平滑滚动（兼容不支持 scroll-behavior 的浏览器） ---------- */
+  if (!('scrollBehavior' in document.documentElement.style)) {
+    document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var id = a.getAttribute('href');
+        if (id.length < 2) return;
+        var target = document.querySelector(id);
+        if (!target) return;
+        e.preventDefault();
+        window.scrollTo(0, target.getBoundingClientRect().top + window.pageYOffset - 64);
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

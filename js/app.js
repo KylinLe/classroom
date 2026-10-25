@@ -142,6 +142,17 @@ function fileHref(teacher, name) {
 
 /* ==================== 文件列表读取 ==================== */
 
+/* 记录最近一次列表来自哪个数据源，显示在课件数量旁，方便排查问题 */
+var lastSource = 'cache';
+var SRC_LABELS = {
+  github: ' · GitHub',
+  manifest: ' · 文件清单',
+  jsdelivr: ' · 备用通道',
+  cache: ' · 缓存',
+  'cache-stale': ' · 旧缓存'
+};
+function srcLabel() { return SRC_LABELS[lastSource] || ''; }
+
 /* 把一条原始文件记录转成课件条目；格式不支持返回 null */
 function makeFile(displayName, size) {
   var ext = fileExt(displayName);
@@ -168,9 +179,14 @@ function fetchFromGitHub(teacher) {
             CONFIG.repo.owner + '/' + CONFIG.repo.name +
             '/contents/' + encodeURIComponent(teacher);
 
-  return fetch(api)
+  return fetch(api, { cache: 'no-store' })
     .then(function (res) {
-      if (res.status === 404) return []; /* 文件夹还没上传过课件 -> 视为空 */
+      if (res.status === 404) {
+        /* 文件夹还没上传过课件 -> 视为空；接口可达，清除「不可达」标记 */
+        lastSource = 'github';
+        try { sessionStorage.removeItem('cp_api_down'); } catch (e) {}
+        return [];
+      }
       if (!res.ok) {
         var e = new Error('HTTP ' + res.status);
         e.code = (res.status === 403) ? 'rate' : 'http'; /* 403 多为匿名限流 */
@@ -180,6 +196,8 @@ function fetchFromGitHub(teacher) {
     })
     .then(function (items) {
       if (!Array.isArray(items)) return [];
+      lastSource = 'github';
+      try { sessionStorage.removeItem('cp_api_down'); } catch (e) {}
       var files = [];
       items.forEach(function (it) {
         if (it.type !== 'file') return; /* 忽略子文件夹与其他条目 */
@@ -196,12 +214,13 @@ function fetchFromJsdelivr(teacher) {
   var api = 'https://data.jsdelivr.com/v1/package/gh/' +
             CONFIG.repo.owner + '/' + CONFIG.repo.name + '@' + CONFIG.branch + '/flat';
 
-  return fetch(api)
+  return fetch(api, { cache: 'no-store' })
     .then(function (res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     })
     .then(function (data) {
+      lastSource = 'jsdelivr';
       var prefix = '/' + teacher + '/';
       var files = [];
       (data.files || []).forEach(function (it) {
@@ -213,6 +232,38 @@ function fetchFromJsdelivr(teacher) {
       });
       return sortFiles(files);
     });
+}
+
+/* 清单通道：files.json（GitHub Actions 在每次推送后自动生成）。
+   与网站同源，不受外部接口网络影响，是最稳定的通道；
+   新课件在推送后约 1-2 分钟内出现。 */
+function fetchFromManifest(teacher) {
+  var url = 'files.json?t=' + Date.now(); /* 加时间戳避免浏览器缓存旧清单 */
+  return fetch(url, { cache: 'no-store' })
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function (data) {
+      lastSource = 'manifest';
+      var list = (data && data.teachers && data.teachers[teacher]) || [];
+      var files = [];
+      list.forEach(function (it) {
+        var f = makeFile(decodeName(it.name), it.size);
+        if (f) files.push(f);
+      });
+      return sortFiles(files);
+    });
+}
+
+/* 主通道在本次会话内失败过（多为网络连不上），记录状态，
+   后续读取直接走清单通道，避免每次都等待连接超时。
+   点「刷新」（force）会重新尝试主通道。 */
+function isApiDown() {
+  try { return sessionStorage.getItem('cp_api_down') === '1'; } catch (e) { return false; }
+}
+function markApiDown() {
+  try { sessionStorage.setItem('cp_api_down', '1'); } catch (e) {}
 }
 
 function readFilesCache(teacher) {
@@ -230,26 +281,43 @@ function writeFilesCache(teacher, files) {
 
 /* 读取某教师文件夹里的课件，返回 Promise<Array>
    每个元素：{ name 展示名, ext, size, badge, action, label }
-   读取顺序：会话缓存 -> GitHub 接口 -> jsDelivr 备用接口 -> 过期缓存兜底 */
+   读取顺序：会话缓存 -> GitHub 接口 -> files.json 清单 -> jsDelivr 备用接口 -> 过期缓存兜底 */
 function fetchTeacherFiles(teacher, force) {
   var cached = readFilesCache(teacher);
   if (!force && cached && (Date.now() - cached.ts) < CONFIG.apiCacheMs) {
+    lastSource = 'cache';
     return Promise.resolve(cached.files);
   }
 
-  return fetchFromGitHub(teacher)
-    .catch(function (firstErr) {
-      /* 主通道失败 -> 尝试备用通道；备用也失败则抛主通道错误用于提示 */
-      return fetchFromJsdelivr(teacher).catch(function () {
-        throw firstErr;
+  var chain;
+  if (force || !isApiDown()) {
+    /* 正常路径：先走主通道；失败则依次降级 */
+    chain = fetchFromGitHub(teacher).catch(function (firstErr) {
+      markApiDown();
+      return fetchFromManifest(teacher).catch(function () {
+        return fetchFromJsdelivr(teacher).catch(function () {
+          throw firstErr; /* 全失败时抛主通道错误，用于提示原因 */
+        });
       });
-    })
+    });
+  } else {
+    /* 主通道本会话已失败过：直接走清单/备用通道，避免等待超时 */
+    chain = fetchFromManifest(teacher).catch(function () {
+      return fetchFromJsdelivr(teacher).catch(function () {
+        var e = new Error('all channels failed');
+        e.code = 'net';
+        throw e;
+      });
+    });
+  }
+
+  return chain
     .then(function (files) {
       writeFilesCache(teacher, files);
       return files;
     })
     .catch(function (err) {
-      if (cached) return cached.files; /* 有旧缓存就先显示旧列表，不报错 */
+      if (cached) { lastSource = 'cache-stale'; return cached.files; } /* 旧缓存兜底 */
       throw err;
     });
 }
@@ -408,6 +476,7 @@ function initSpacePage() {
 
   function render(files) {
     list.classList.remove('is-loading');
+    var src = srcLabel(); /* 数据源标注，如「· 文件清单」 */
     if (files.length === 0) {
       list.innerHTML =
         '<div class="state">' +
@@ -415,13 +484,13 @@ function initSpacePage() {
           '<div class="state-cn">暂无课件</div>' +
           '<div class="state-hint">把课件文件放进 ' + teacher + ' 文件夹并上传到 GitHub 后，<br>这里会自动出现。</div>' +
         '</div>';
-      count.textContent = '0 个课件';
+      count.textContent = '0 个课件' + src;
       return;
     }
     list.innerHTML = files.map(function (f) {
       return fileRowHtml(teacher, f);
     }).join('');
-    count.textContent = files.length + ' 个课件';
+    count.textContent = files.length + ' 个课件' + src;
   }
 
   function renderError(err) {

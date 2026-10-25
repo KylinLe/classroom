@@ -7,7 +7,8 @@
 ## 技术约束（重要）
 
 - **纯静态站点**：只能使用 HTML、JS、CSS，无后端、无构建步骤，部署在 GitHub Pages。
-- **仓库必须保持公开**：GitHub Pages 免费版要求公开仓库，且文件自动识别依赖 GitHub 匿名接口（私有仓库下接口会 401）。
+- **GitHub Actions 是唯一例外**：`.github/workflows/update-filelist.yml` 是部署侧的自动小助手（每次推送后生成课件清单 files.json），不参与网站运行；网站本身仍是纯静态的。
+- **仓库必须保持公开**：GitHub Pages 免费版要求公开仓库；主通道 GitHub Contents API 在私有仓库下会 401（有清单通道兜底，但公开是前提）。
 - 本地无需安装任何依赖，直接用浏览器打开 `index.html` 即可预览（文件列表读取的是线上 GitHub 仓库，本地也能正常工作）。
 
 ## 文件结构
@@ -19,6 +20,10 @@ classplatform/
 ├── css/style.css       # 共享样式（设计系统）
 ├── js/app.js           # 共享脚本（配置 + 密码校验 + 文件列表读取）
 ├── logo.png            # 社团 Logo（2000×2000，网页中缩放显示）
+├── files.json          # 课件清单（GitHub Actions 每次推送后自动生成，不要手动修改）
+├── .github/workflows/  # 自动生成 files.json 的 GitHub Actions 工作流（不要删除）
+├── README.md           # 项目维护文档（机制、配置、日常维护、已知限制），其他 AI 接手必读
+├── 测试清单.md          # 部署前 / 加课件后的测试清单与注意事项（给使用者的检查手册）
 ├── aaa.html            # 社团主页（设计参考，不属于平台流程，可保留可删除）
 ├── hw/                 # 教师 hw 的课件文件夹
 ├── lxn/                # 教师 lxn 的课件文件夹
@@ -44,14 +49,16 @@ classplatform/
 - **改密码**：终端运行 `printf '新密码' | shasum -a 256`，把输出替换到 `CONFIG.passwordHash`。
 - **注意**：纯前端校验挡不住懂技术的人（哈希和逻辑都在源码里）。对社团上课平台够用，但不是真正的安全。
 
-### 2. 文件自动识别（双通道读取）
+### 2. 文件自动识别（三通道读取）
 
 - `space.html` 实时读取仓库对应教师文件夹，**无需维护文件清单**：往教师文件夹里放课件并上传到 GitHub（main 分支）后，网页列表自动出现；文件夹为空或不存在时显示「暂无课件」。
 - 读取顺序（`fetchTeacherFiles`）：
   1. `sessionStorage` 会话缓存（5 分钟内直接命中，不发请求）；
-  2. **主通道**：GitHub Contents API `https://api.github.com/repos/KylinLe/classroom/contents/<教师账号>`（新课件立刻可见）；
-  3. **备用通道**：GitHub 接口连不上时，自动改用 jsDelivr CDN 数据接口 `https://data.jsdelivr.com/v1/package/gh/...@main/flat`（国内访问通常更稳定，但 CDN 有缓存，新上传的课件可能要过一段时间才出现）；
-  4. 两个通道都失败但有旧缓存时，先显示旧列表兜底；都失败且无缓存才报错，错误提示会写明原因（限流 / 网络）并附直达 GitHub 文件夹的链接。
+  2. **主通道**：GitHub Contents API `https://api.github.com/repos/KylinLe/classroom/contents/<教师账号>`（新课件立刻可见；个别网络环境连不上时自动降级）；
+  3. **清单通道**：`files.json`，与网站同源、最稳定。由 GitHub Actions 在**每次推送后自动生成**（见 `.github/workflows/update-filelist.yml`：扫描所有顶层文件夹，把支持格式的课件名和大小写入清单并提交回仓库）。新课件推送后约 1-2 分钟内出现；
+  4. **备用通道**：jsDelivr CDN 数据接口 `https://data.jsdelivr.com/v1/package/gh/...@main/flat`（清单缺失时的最后兜底；CDN 有缓存，新课件可能延迟出现）；
+  5. 全部失败但有旧缓存时，先显示旧列表兜底；全失败且无缓存才报错，错误提示写明原因（限流 / 网络）并附直达 GitHub 文件夹的链接。
+- **数据源标注**：课件数量旁会标注当前数据来源（`GitHub` / `文件清单` / `备用通道` / `缓存`），排查「新课件不出现」时先看这个标注。主通道在本会话失败过后会记住，后续直接走清单通道，避免每次等待连接超时；点「刷新」会重新尝试主通道。
 - 支持格式与行为：
 
   | 扩展名 | 图标 | 点击行为 |
@@ -75,14 +82,16 @@ classplatform/
 
 ## 日常维护
 
-**添加课件**：把文件放进对应教师文件夹（如 `hw/`）→ 上传到 GitHub main 分支 → 完成。网页下次打开（或点「刷新」）即出现。
+**添加课件**：把文件放进对应教师文件夹（如 `hw/`）→ 上传到 GitHub main 分支 → 完成。推送会触发 GitHub Actions 自动刷新 files.json，约 1-2 分钟后网页（点「刷新」）即出现新课件。
 
 **新增教师**：
 1. 在仓库根目录新建文件夹（如 `abc/`）；
 2. 在 `CONFIG.teachers` 数组里加 `'abc'`；
-3. 上传即可。入口页会自动多一个教室。
+3. 上传即可。入口页会自动多一个教室，files.json 也会自动包含它。
 
-**更换仓库**：修改 `CONFIG.repo` 的 `owner` 和 `name`。
+**更换仓库**：修改 `CONFIG.repo` 的 `owner` 和 `name`（工作流里没有写死仓库名，无需改动）。
+
+**不要动的东西**：`.github/workflows/update-filelist.yml` 和自动生成的 `files.json` 不要删除、不要手动修改。注意 `.github` 是隐藏文件夹（访达里按 `Cmd + Shift + .` 显示），上传时确保它一起上传。
 
 ## 设计系统
 
@@ -96,7 +105,7 @@ classplatform/
 ## 已知限制
 
 - 密码门是「挡路人」级别，不是安全机制；仓库公开时课件在 GitHub 上本身可见。
-- 匿名接口限流 60 次/小时/IP（有缓存兜底，触顶时有明确提示）。
-- 个别网络环境访问 `api.github.com` 不畅，此时走 jsDelivr 备用通道，新课件可能出现延迟。
+- 主通道 GitHub 匿名接口限流 60 次/小时/IP；触顶或网络不通时自动降级到 files.json 清单通道，列表不受影响。
+- 个别网络环境访问 `api.github.com` 不畅：清单通道保证列表照常更新（推送后约 1-2 分钟）；若连清单都读不到才走 jsDelivr 备用通道，此时新课件可能有延迟。
 - 教师文件夹内不支持子文件夹。
-- 空文件夹在 git 中不存在：新教师文件夹里至少放一个课件后，接口才能读到它。
+- 空文件夹在 git 中不存在：新教师文件夹里至少放一个课件后，清单才会包含它。
