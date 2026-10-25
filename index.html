@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>普陀中学摄影社 · 上课平台</title>
+<meta name="description" content="普陀中学摄影社上课平台。输入访问密码，选择教师空间进入。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='5'%3E%3Ccircle cx='50' cy='50' r='42'/%3E%3Cpath d='M50 26 L71 38 L71 62 L50 74 L29 62 L29 38 Z'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="gate">
+
+<!-- ================= 导航 ================= -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="返回首页">
+      <img class="logo" src="logo.png" alt="普陀中学摄影社">
+      <span>
+        <span class="name">普陀中学摄影社</span>
+        <span class="sub">Putuo Photography Club</span>
+      </span>
+    </a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= 密码门 ================= -->
+  <section class="view gate" id="gate-view">
+    <div class="gate-inner">
+      <img class="gate-logo" src="logo.png" alt="普陀中学摄影社">
+      <div class="gate-eyebrow">Putuo Photography Club</div>
+      <h1 class="gate-title">上课平台</h1>
+      <div class="gate-en">Class Platform</div>
+
+      <form class="gate-form" id="gate-form" autocomplete="off">
+        <input class="gate-input" id="gate-input" type="password"
+               placeholder="请输入访问密码" aria-label="访问密码" autofocus>
+        <button class="gate-btn" type="submit">进入</button>
+        <div class="gate-error" id="gate-error" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= 教师选择 ================= -->
+  <section class="view" id="select-view">
+    <div class="wrap">
+      <div class="hero">
+        <div class="eyebrow">Putuo Photography Club</div>
+        <h1>选择教室</h1>
+        <div class="hero-en">Classrooms</div>
+        <p class="hero-desc">
+          选择你要进入的教师空间，<br>
+          查看课件与学习资料。
+        </p>
+        <div class="teacher-list reveal" id="teacher-list"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <a class="brand" href="index.html">
+      <img class="logo" src="logo.png" alt="普陀中学摄影社">
+      <span>
+        <span class="name">普陀中学摄影社</span>
+        <span class="sub">Putuo Photography Club</span>
+      </span>
+    </a>
+    <div class="legal">
+      ©️ Copyright 乐轩宁 of 普陀中学摄影社
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

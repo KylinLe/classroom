@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>普陀中学摄影社 · 教师空间</title>
+<meta name="description" content="普陀中学摄影社上课平台教师空间。查看课件、播放 HTML 课程、下载资料。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='5'%3E%3Ccircle cx='50' cy='50' r='42'/%3E%3Cpath d='M50 26 L71 38 L71 62 L50 74 L29 62 L29 38 Z'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="space">
+
+<!-- ================= 导航 ================= -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="返回首页">
+      <img class="logo" src="logo.png" alt="普陀中学摄影社">
+      <span>
+        <span class="name">普陀中学摄影社</span>
+        <span class="sub">Putuo Photography Club</span>
+      </span>
+    </a>
+    <div class="nav-right">
+      <span class="nav-teacher" id="nav-teacher"></span>
+      <a class="nav-switch" href="index.html">切换账号</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ================= 空间头部 ================= -->
+  <section class="space-hero">
+    <div class="wrap">
+      <div class="eyebrow">Classroom</div>
+      <h1 id="space-teacher">…</h1>
+      <div class="hero-en">Teaching Space</div>
+      <p class="hero-desc">
+        课件列表 · 支持 HTML / PPT / PPTX / PDF / DOC / DOCX<br>
+        HTML 课件点击播放，其余格式点击下载。
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= 课件列表 ================= -->
+  <section class="wrap">
+    <div class="sec-head reveal">
+      <h2>课件<span class="en">Files</span></h2>
+      <div class="sec-tools">
+        <span class="sec-count" id="file-count"></span>
+        <button class="text-btn" id="refresh-btn" type="button">刷新</button>
+      </div>
+    </div>
+    <div class="file-list" id="file-list"></div>
+  </section>
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <a class="brand" href="index.html">
+      <img class="logo" src="logo.png" alt="普陀中学摄影社">
+      <span>
+        <span class="name">普陀中学摄影社</span>
+        <span class="sub">Putuo Photography Club</span>
+      </span>
+    </a>
+    <div class="legal">
+      ©️ Copyright 乐轩宁 of 普陀中学摄影社
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
