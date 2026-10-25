@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>普陀中学摄影社 · 第一课</title>
+<style>
+/* ============================================================
+   普陀中学摄影社 · 第一课课件
+   灰色外框内嵌圆角矩形页面；切页按钮位于外框左下角
+   外观沿用官网：黑白 / 细线 / 字距 / 相机标
+   舞台固定 1600×900 等比缩放，适配任意横屏
+   ============================================================ */
+
+:root{
+  --ink:#0f0f0f;
+  --paper:#ffffff;
+  --muted:#6e6e73;
+  --faint:#8a8a90;
+  --line:#e3e3e5;
+  --frame:#c9c9ce;
+  --ease:cubic-bezier(.22,.61,.24,1);
+  --r:22px;
+}
+
+*,*::before,*::after{ margin:0; padding:0; box-sizing:border-box; }
+
+html,body{
+  height:100%; overflow:hidden;
+  background:var(--frame);
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC",
+              "Helvetica Neue", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* ---------- 舞台：外框中的圆角矩形 ---------- */
+#stage{
+  position:absolute; left:50%; top:calc(50% + var(--ty,0px));
+  width:1600px; height:900px;
+  transform-origin:center center;
+  transform:translate(-50%,-50%) scale(var(--k,1));
+  background:var(--paper);
+  border-radius:var(--r);
+  box-shadow:0 26px 72px rgba(0,0,0,.22), 0 3px 12px rgba(0,0,0,.10);
+  overflow:hidden;
+}
+
+/* ---------- 页面 ---------- */
+.slide{
+  position:absolute; inset:0;
+  background:var(--paper);
+  opacity:0; z-index:1; pointer-events:none;
+}
+.slide.is-active{
+  opacity:1; z-index:2; pointer-events:auto;
+  animation:slIn .46s var(--ease) both;
+}
+@keyframes slIn{
+  from{ opacity:0; transform:translate3d(var(--dx,14px),0,0) scale(.996); }
+  to  { opacity:1; transform:none; }
+}
+/* 放大动效页：父级只做淡入，不做缩放位移 —— 否则会污染标题的落点计算 */
+.slide.is-active.morphing{ animation-name:slFade; }
+@keyframes slFade{
+  from{ opacity:0; }
+  to  { opacity:1; }
+}
+
+.slide.is-active .st{
+  animation:rise .62s var(--ease) both;
+  animation-delay:calc(80ms + min(var(--i,0) * 42ms, 300ms));
+  will-change:transform,opacity;
+}
+@keyframes rise{
+  from{ opacity:0; transform:translate3d(0,12px,0); }
+  to  { opacity:1; transform:none; }
+}
+
+/* 放大动效进行中：目标标题及其祖先不参与入场动画，避免位移叠加 */
+.slide.is-active .st.morph-live{ animation:none; opacity:1; }
+/* 标题飞行期间，同页其余内容先隐藏，标题落位后再依次出现 */
+.slide.is-active.morphing .st.morph-wait{ animation:none; opacity:0; }
+
+/* ---------- 顶部进度 ---------- */
+.prog{ position:absolute; top:0; left:calc(var(--r) + 2px); right:calc(var(--r) + 2px);
+       height:2px; z-index:20; pointer-events:none; }
+.prog i{
+  display:block; height:100%; width:0;
+  background:#fff; mix-blend-mode:difference;
+  transition:width .45s var(--ease);
+}
+
+/* ---------- 页眉 ---------- */
+.strip{
+  position:absolute; top:40px; left:92px; right:92px;
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:19px; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--faint); font-weight:500;
+}
+.strip .r{ font-variant-numeric:tabular-nums; }
+
+/* ---------- 正文区 ---------- */
+.body{
+  position:absolute; inset:88px 92px 104px;
+  display:flex; flex-direction:column;
+}
+
+.hd{ display:grid; grid-template-columns:82px minmax(0,1fr); gap:28px; align-items:start; }
+.hd .num{
+  font-size:20px; letter-spacing:.18em; color:var(--faint);
+  font-weight:600; padding-top:.95em; font-variant-numeric:tabular-nums;
+}
+.hd h2{ font-size:70px; line-height:1.06; letter-spacing:-.03em; font-weight:600; }
+.hd .en{
+  margin-top:15px; font-size:20px; letter-spacing:.3em;
+  text-transform:uppercase; color:var(--faint); font-weight:500;
+}
+
+.main{ margin-top:44px; flex:1; display:flex; flex-direction:column; min-height:0; }
+
+.say{
+  font-size:44px; line-height:1.55; letter-spacing:-.015em;
+  color:var(--ink); font-weight:600; max-width:26em;
+}
+.say em{ font-style:normal; color:var(--faint); }
+
+/* ---------- 列表 ---------- */
+.rows{ border-top:1px solid var(--ink); }
+.row{
+  display:grid; grid-template-columns:82px 300px minmax(0,1fr);
+  gap:26px; align-items:baseline; padding:30px 0;
+  border-bottom:1px solid var(--line);
+}
+/* 撑满剩余高度：行等分、竖线贯通 */
+.rows.fill{ display:flex; flex-direction:column; flex:1; }
+.rows.fill .row{ flex:1 1 0; align-items:center; }
+.row .n{ font-size:20px; letter-spacing:.18em; color:var(--faint); font-variant-numeric:tabular-nums; }
+.row .t{ font-size:33px; font-weight:600; letter-spacing:-.015em; }
+.row .d{ font-size:22px; line-height:1.8; color:var(--muted); }
+
+/* ---------- 三栏 ---------- */
+.c3{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid var(--ink); }
+.c3.two{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+.c3 > div{ padding:30px 34px 4px 0; }
+.c3 > div + div{ border-left:1px solid var(--line); padding-left:34px; }
+.c3 .k{ font-size:20px; letter-spacing:.18em; color:var(--faint); font-weight:600; }
+.c3 h3{ font-size:37px; font-weight:600; letter-spacing:-.022em; margin-top:13px; }
+.c3 .en2{
+  font-size:20px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--faint); margin-top:9px; font-weight:500;
+}
+.c3 p{ font-size:21px; line-height:1.9; color:var(--muted); margin-top:17px; }
+
+/* 紧凑变体：整页多块内容并置 */
+.c3.tight > div{ padding:16px 24px 0 0; }
+.c3.tight > div + div{ padding-left:24px; border-left-color:transparent; }
+/* 竖分隔线只画到清单区之前（用伪元素精确控制高度），避免与横线交叉成乱网 */
+.c3.tight > div + div::before{
+  content:''; position:absolute; left:0; top:18px; width:1px; height:142px;
+  background:var(--line);
+}
+/* 下排两栏内容更少，竖线相应缩短 */
+.c3.two.tight > div + div::before{ height:142px; }
+.c3.tight > div{ position:relative; }
+.c3.tight h3{ font-size:29px; margin-top:7px; }
+.c3.tight .en2{
+  display:block; font-size:19px; letter-spacing:.18em; margin-top:5px;
+}
+.c3.tight p{ font-size:20px; line-height:1.55; margin-top:8px; }
+.c3.tight .chips span{ font-size:20px; padding:11px 16px; }
+
+/* 文字型要点清单（不使用图片占位） */
+.klist{ margin-top:12px; }
+.klist div{
+  font-size:20px; line-height:1.45; color:var(--muted);
+  padding:4px 0; border-bottom:1px solid var(--line);
+  width:100%;
+}
+.klist div:last-child{ border-bottom:none; }
+
+/* 迷你预览 */
+.mini{ margin-top:12px; }
+.mini-list div{
+  font-size:20px; line-height:1.45; color:var(--muted);
+  padding:4px 0; border-bottom:1px solid var(--line);
+  display:flex; gap:14px; align-items:baseline;
+  width:100%;
+}
+.mini-list div:last-child{ border-bottom:none; }
+.mini-list b{ color:var(--ink); font-weight:600; min-width:94px; }
+
+/* ---------- 两栏数值 ---------- */
+.duo{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--ink); }
+.duo > div{ padding:26px 40px 4px 0; }
+.duo > div + div{ border-left:1px solid var(--line); padding-left:40px; }
+.duo .v{ font-size:58px; font-weight:600; letter-spacing:-.035em; line-height:1.06; }
+.duo .k{
+  font-size:21px; letter-spacing:.14em; color:var(--ink); margin-top:12px;
+  font-weight:600;
+}
+.duo .d{ font-size:21px; color:var(--muted); margin-top:9px; line-height:1.8; }
+
+/* ---------- 底部小注（04/05 页并列，位置与高度需一致） ---------- */
+.cap{
+  margin-top:14px; height:30px; line-height:30px;
+  font-size:20px; color:var(--muted);
+}
+.cap::before{
+  content:''; display:inline-block; width:28px; height:1px;
+  background:var(--line); vertical-align:middle; margin-right:13px;
+}
+.cap b{ color:var(--ink); font-weight:600; }
+
+/* ============================================================
+   01 封面
+   ============================================================ */
+.cover2{
+  position:absolute; inset:0; padding:74px 92px 60px;
+  display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+  text-align:center;
+}
+/* 相机标：块级盒必须用 margin:auto 居中（text-align 对块级盒无效） */
+.c2mark{ width:150px; margin:0 auto; color:var(--ink); }
+.c2mark svg{ width:100%; height:auto; display:block; }
+.c2name{ margin-top:26px; font-size:26px; font-weight:600; letter-spacing:.24em; }
+.c2en{ margin-top:11px; font-size:20px; letter-spacing:.3em; text-transform:uppercase; color:var(--faint); font-weight:500; }
+.c2title{
+  font-size:126px; line-height:1.02; letter-spacing:-.045em; font-weight:600;
+  margin-left:-.02em;
+}
+.c2bot{ display:flex; gap:64px; align-items:baseline; font-size:21px; color:var(--muted); }
+.c2bot b{ color:var(--ink); font-weight:600; letter-spacing:.02em; }
+.c2bot .sep{ width:1px; height:24px; background:var(--line); align-self:center; }
+
+/* ============================================================
+   02 自我介绍
+   ============================================================ */
+.about{
+  display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);
+  gap:70px; align-items:stretch; flex:1;
+}
+.about-l{ display:flex; flex-direction:column; justify-content:space-between; padding-right:20px; }
+.about-name{ font-size:86px; line-height:1; letter-spacing:-.04em; font-weight:600; }
+.about-cn{ margin-top:18px; font-size:27px; color:var(--muted); letter-spacing:.22em; }
+.about-tag{ margin-top:24px; font-size:21px; color:var(--faint); letter-spacing:.03em; }
+.about-note{
+  margin-top:40px; display:flex; gap:14px; align-items:flex-start;
+  font-size:22px; line-height:1.75; color:var(--muted);
+}
+.about-note .tick{ width:28px; height:1px; background:var(--line); flex:0 0 auto; margin-top:15px; }
+/* ============================================================
+   03 课程介绍 —— 两张课程卡（第 4 页由此放大）
+   ============================================================ */
+.coursegrid{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:56px;
+  margin-top:44px; flex:1;
+  border-top:1px solid var(--ink);
+}
+.ccard{ padding-top:22px; display:flex; flex-direction:column; }
+.ccard .ck{ font-size:20px; letter-spacing:.18em; color:var(--faint); font-weight:600; }
+.ccard h3{ font-size:64px; font-weight:600; letter-spacing:-.03em; margin-top:12px; }
+.ccard .cen{ margin-top:10px; font-size:20px; letter-spacing:.26em; text-transform:uppercase; color:var(--faint); font-weight:500; }
+.ccard p{ margin-top:18px; font-size:22px; line-height:1.6; color:var(--muted); }
+.ccard .clist{ margin-top:16px; }
+.ccard .clist div{
+  font-size:20px; line-height:1.45; color:var(--faint);
+  padding:6px 0; border-bottom:1px solid var(--line);
+  width:100%;
+}
+.ccard .clist div:last-child{ border-bottom:none; }
+.ccard .cfoot{ margin-top:auto; padding-top:20px; font-size:20px; color:var(--faint); letter-spacing:.03em; }
+
+/* ============================================================
+   04 / 05 课程详情 —— 整页大字
+   ============================================================ */
+.detail{ display:flex; flex-direction:column; height:100%; }
+.dnum{ font-size:20px; letter-spacing:.18em; color:var(--faint); font-weight:600; }
+.detail h2{ font-size:140px; line-height:1.02; letter-spacing:-.045em; font-weight:600; margin-top:16px; }
+.dsub{
+  margin-top:32px; font-size:44px; line-height:1.5; letter-spacing:-.015em;
+  font-weight:600; color:var(--ink); max-width:24em;
+}
+.dfoot{ margin-top:auto; padding-top:30px; }
+/* 中段关键词条 */
+.dmid{ margin-top:38px; padding-top:20px; border-top:1px solid var(--line); }
+.dmid-k{ font-size:21px; letter-spacing:.18em; color:var(--ink); font-weight:600; }
+.chips{ display:flex; flex-wrap:wrap; gap:12px; margin-top:18px; }
+.chips span{
+  font-size:23px; line-height:1; padding:13px 22px;
+  border:1px solid var(--line); border-radius:999px; color:var(--ink);
+}
+
+/* ============================================================
+   视频播放层
+   ============================================================ */
+.player{
+  position:fixed; inset:0; z-index:90;
+  display:none; place-items:center;
+  background:rgba(6,6,8,.97);
+  backdrop-filter:blur(6px);
+}
+.player.on{ display:grid; }
+/* 视频铺满整个视口：用 object-fit:contain 保持原始比例，
+   非 16:9 素材会自动留黑边，不会被裁切或拉伸 */
+.player video{
+  width:100%; height:100%;
+  object-fit:contain;
+  background:transparent;
+  outline:none;
+}
+.player .pclose{
+  position:absolute; top:26px; right:30px;
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+  color:#fff; cursor:pointer; display:grid; place-items:center;
+  transition:background .2s var(--ease), transform .2s var(--ease);
+}
+.player .pclose:hover{ background:rgba(255,255,255,.22); transform:scale(1.06); }
+.player .pclose svg{ width:20px; height:20px; }
+.player .pmiss{
+  position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+  font-size:17px; letter-spacing:.04em; color:#e6e6ea;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.16);
+  padding:10px 20px; border-radius:999px; display:none;
+}
+.player .pmiss.on{ display:block; }
+
+/* ---------- 反白页 ---------- */
+.slide.dark{ background:var(--ink); color:#fff; }
+.slide.dark .strip{ color:#8b8b91; }
+.slide.dark .hd .num{ color:#8b8b91; }
+.slide.dark .hd .en{ color:#8b8b91; }
+.slide.dark .c3{ border-top-color:#fff; }
+.slide.dark .c3 > div + div{ border-left-color:#2a2a2e; }
+.slide.dark .c3 .k,
+.slide.dark .c3 .en2{ color:#8b8b91; }
+.slide.dark .c3 p{ color:#c2c2c8; }
+.slide.dark .say{ color:#fff; }
+.slide.dark .say em{ color:#91919a; }
+
+/* ---------- 工具条：外框左下角，三枚分离的扁圆角矩形 ---------- */
+.bar{
+  position:fixed; left:64px; bottom:8px; z-index:80;
+  display:flex; align-items:center; gap:10px;
+}
+.bar button{
+  -webkit-appearance:none; appearance:none;
+  width:58px; height:36px; border-radius:10px;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(0,0,0,.09);
+  box-shadow:0 4px 14px rgba(0,0,0,.13);
+  display:grid; place-items:center; color:var(--ink); cursor:pointer;
+  transition:transform .22s var(--ease), box-shadow .22s var(--ease),
+             background .22s var(--ease), opacity .22s var(--ease);
+}
+.bar button:hover{ background:#fff; transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.17); }
+.bar button:active{ transform:translateY(0); }
+.bar button:disabled{ opacity:.3; cursor:default; transform:none; box-shadow:0 4px 14px rgba(0,0,0,.10); }
+.bar svg{ width:20px; height:20px; display:block; }
+.count{
+  display:flex; align-items:baseline; gap:5px;
+  font-size:18px; letter-spacing:.16em; color:rgba(26,26,28,.58);
+  font-variant-numeric:tabular-nums; user-select:none; padding-left:6px;
+}
+.count i{ font-style:normal; opacity:.45; }
+.count span{ display:inline-block; }
+.count span.roll{ animation:roll .34s var(--ease); }
+@keyframes roll{
+  from{ opacity:0; transform:translate3d(0,7px,0); }
+  to  { opacity:1; transform:none; }
+}
+
+.hint{
+  position:fixed; left:64px; bottom:19px; z-index:79;
+  font-size:17px; letter-spacing:.14em; color:rgba(28,28,30,.48);
+  pointer-events:none; transition:opacity .5s var(--ease);
+  text-transform:uppercase;
+}
+.hint.hide{ opacity:0; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; transition:none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- 新版相机标，fill/stroke 全部继承 currentColor -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="camMark">
+    <g transform="translate(-92.14,-87.14) scale(1.4286)">
+      <path d="M 103.00 276.00 L 283.00 276.00 Q 288.00 276.00 292.10 273.14 L 306.90 262.86 Q 311.00 260.00 311.00 255.00 L 311.00 155.00 Q 311.00 150.00 306.00 150.00 L 242.50 150.00 Q 240.00 150.00 240.00 147.50 L 240.00 128.50 Q 240.00 126.00 237.50 126.00 L 196.50 126.00 Q 194.00 126.00 194.00 128.50 L 194.00 147.50 Q 194.00 150.00 191.50 150.00 L 126.00 150.00 Q 121.00 150.00 116.90 152.86 L 102.10 163.14 Q 98.00 166.00 98.00 171.00 L 98.00 271.00 Q 98.00 276.00 103.00 276.00 Z" stroke-width="5.2"/>
+      <circle cx="193.0" cy="221.0" r="39.0" stroke-width="4.4"/>
+      <circle cx="193.0" cy="221.0" r="30.0" stroke-width="2.2"/>
+      <circle cx="193.0" cy="221.0" r="11.5" fill="currentColor" stroke="none"/>
+      <rect x="243.0" y="179.0" width="26" height="11" rx="3" fill="currentColor" stroke="none"/>
+    </g>
+  </g>
+</defs></svg>
+
+<div id="stage">
+
+  <div class="prog"><i id="prog"></i></div>
+
+  <!-- ========== 01 封面 ========== -->
+  <section class="slide">
+    <div class="cover2">
+      <div class="st" style="--i:0">
+        <div class="c2mark">
+          <svg viewBox="40 85 320 230" fill="none" stroke="currentColor"
+               stroke-linecap="round" stroke-linejoin="round"><use href="#camMark"/></svg>
+        </div>
+        <div class="c2name">普陀中学摄影社</div>
+        <div class="c2en">Putuo Photography Club</div>
+      </div>
+
+      <div class="c2title st" style="--i:1">欢迎加入摄影社</div>
+
+      <div class="c2bot st" style="--i:2">
+        <span><b>第一课 · 认识光</b></span>
+        <span class="sep"></span>
+        <span>Kylin Le 主讲</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 02 自我介绍 ========== -->
+  <section class="slide">
+    <div class="strip"><span>普陀中学摄影社 · 第一课</span><span class="r">02 / 06</span></div>
+    <div class="body">
+      <div class="hd st" style="--i:0">
+        <div class="num">02</div>
+        <div>
+          <h2>自我介绍</h2>
+          <div class="en">About Me</div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="about">
+      <div class="about-l st" style="--i:1">
+        <div>
+          <div class="about-name">Kylin Le</div>
+          <div class="about-cn">乐轩宁</div>
+          <div class="about-tag">普陀中学摄影社成员</div>
+        </div>
+        <div class="about-note"><span class="tick"></span><span>这一课由我主讲。<br>下面先认识一下我负责的事。</span></div>
+      </div>
+          <div class="rows fill">
+            <div class="row st" style="--i:2">
+              <div class="n">01</div>
+              <div class="t">图表制作</div>
+              <div class="d">社刊、课程与活动里的数据图表</div>
+            </div>
+            <div class="row st" style="--i:3">
+              <div class="n">02</div>
+              <div class="t">网站运维</div>
+              <div class="d">普陀中学摄影社网站的建设与更新</div>
+            </div>
+            <div class="row st" style="--i:4">
+              <div class="n">03</div>
+              <div class="t">基础课教学</div>
+              <div class="d">理论课 · 软硬件操作与概念学习</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 03 课程介绍（大字） ========== -->
+  <section class="slide">
+    <div class="strip"><span>普陀中学摄影社 · 第一课</span><span class="r">03 / 06</span></div>
+    <div class="body">
+      <div class="hd st" style="--i:0">
+        <div class="num">03</div>
+        <div>
+          <h2>课程介绍</h2>
+          <div class="en">Courses</div>
+        </div>
+      </div>
+      <div class="main">
+        <p class="say st" style="--i:1">两门课。<em>一门讲清楚，一门练出来。</em></p>
+        <div class="coursegrid">
+          <div class="ccard st" style="--i:2">
+            <div class="ck">A</div>
+            <h3 data-morph="basic">基础课</h3>
+            <div class="cen">Foundation</div>
+            <p>偏向理论 · 软硬件操作与概念学习</p>
+            <div class="clist">
+              <div>相机按键、菜单、存储</div>
+              <div>曝光、构图、色彩原理</div>
+              <div>光线的方向与强弱</div>
+            </div>
+            <div class="cfoot">零基础友好 · 每周二</div>
+          </div>
+          <div class="ccard st" style="--i:3">
+            <div class="ck">B</div>
+            <h3 data-morph="advanced">提升课</h3>
+            <div class="cen">Advanced</div>
+            <p>偏向实践 · 剪辑思路与作品打磨</p>
+            <div class="clist">
+              <div>素材整理与取舍</div>
+              <div>节奏编排与转场</div>
+              <div>成片叙事与互评</div>
+            </div>
+            <div class="cfoot">需要基础 · 主要负责人：孙炜航</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 04 基础课（由第 03 页的基础课标题放大而来） ========== -->
+  <section class="slide">
+    <div class="strip"><span>普陀中学摄影社 · 第一课</span><span class="r">04 / 06</span></div>
+    <div class="body">
+      <div class="detail">
+        <div class="dnum st" style="--i:0">04</div>
+        <h2 class="st" style="--i:1" data-morph="basic">基础课</h2>
+        <div class="dsub st" style="--i:2">偏向理论，如软硬件操作和概念学习……</div>
+        <div class="dmid st" style="--i:3">
+          <div class="dmid-k">本课关键词</div>
+          <div class="chips">
+            <span>相机操作</span><span>曝光三要素</span><span>构图原理</span><span>色彩与光线</span>
+          </div>
+        </div>
+        <div class="dfoot">
+          <div class="duo">
+            <div class="st" style="--i:4">
+              <div class="v">软硬件</div>
+              <div class="k">操作</div>
+              <div class="d">认识自己的相机：按键、菜单、存储、清理。</div>
+            </div>
+            <div class="st" style="--i:5">
+              <div class="v">概念</div>
+              <div class="k">学习</div>
+              <div class="d">曝光三要素、构图原理、色彩与光线的关系。</div>
+            </div>
+          </div>
+          <div class="cap st" style="--i:6">主讲：<b>Kylin Le</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 05 提升课 ========== -->
+  <section class="slide">
+    <div class="strip"><span>普陀中学摄影社 · 第一课</span><span class="r">05 / 06</span></div>
+    <div class="body">
+      <div class="detail">
+        <div class="dnum st" style="--i:0">05</div>
+        <h2 class="st" style="--i:1" data-morph="advanced">提升课</h2>
+        <div class="dsub st" style="--i:2">偏向实践，如剪辑思路……</div>
+        <div class="dmid st" style="--i:3">
+          <div class="dmid-k">本课关键词</div>
+          <div class="chips">
+            <span>剪辑节奏</span><span>素材整理</span><span>成片叙事</span><span>作品打磨</span>
+          </div>
+        </div>
+        <div class="dfoot">
+          <div class="duo">
+            <div class="st" style="--i:4">
+              <div class="v">剪辑</div>
+              <div class="k">思路</div>
+              <div class="d">从一堆素材到一条成片，节奏怎么排。</div>
+            </div>
+            <div class="st" style="--i:5">
+              <div class="v">实战</div>
+              <div class="k">项目</div>
+              <div class="d">跟着一个主题，拍出一组完整作品。</div>
+            </div>
+          </div>
+          <div class="cap st" style="--i:6">主要负责人：<b>孙炜航</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 06 网站和公众号（含作品展示 / 活动日程 / 上课平台） ========== -->
+  <section class="slide">
+    <div class="strip"><span>普陀中学摄影社 · 第一课</span><span class="r">06 / 06</span></div>
+    <div class="body">
+      <div class="hd st" style="--i:0">
+        <div class="num">06</div>
+        <div>
+          <h2>网站和公众号</h2>
+          <div class="en">Website &amp; WeChat</div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="c3 tight st" style="--i:1">
+          <div>
+            <div class="k">01</div>
+            <h3>摄影社网站</h3>
+            <div class="en2">Website</div>
+            <p>课程、任务、招新，都在这里。</p>
+            <div class="klist">
+              <div>课程表与任务发布</div>
+              <div>招新与作品征集</div>
+            </div>
+          </div>
+          <div>
+            <div class="k">02</div>
+            <h3>微信公众号</h3>
+            <div class="en2">WeChat</div>
+            <p>作品更新、活动通知，第一时间发。</p>
+            <div class="klist">
+              <div>每节课后更新作品</div>
+              <div>活动通知固定出口</div>
+            </div>
+          </div>
+          <div>
+            <div class="k">03</div>
+            <h3>优秀作品展示</h3>
+            <div class="en2">Selected Works</div>
+            <p>社员自己拍的，每节课挑三张互评。</p>
+            <div class="klist">
+              <div>优秀作品持续更新</div>
+              <div>课后投屏互评</div>
+            </div>
+          </div>
+        </div>
+        <div class="c3 two tight st" style="--i:2; margin-top:22px">
+          <div>
+            <div class="k">04</div>
+            <h3>摄影活动日程</h3>
+            <div class="en2">Schedule</div>
+            <p>常规活动，名单每次在群里发。</p>
+            <div class="mini">
+              <div class="mini-list">
+                <div><b>校内</b><span>元旦汇演 · 三独比赛 · 校园日常</span></div>
+                <div><b>校外</b><span>外拍活动，一整个下午一个主题</span></div>
+                <div><b>课内</b><span>作品鉴赏，把照片摊开一起看</span></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="k">05</div>
+            <h3>上课平台</h3>
+            <div class="en2">Platform</div>
+            <p>两种托管方式，按需取用。</p>
+            <div class="mini">
+              <div class="mini-list">
+                <div><b>讲师账号</b><span>任课老师有独立账号</span></div>
+                <div><b>PPT 托管</b><span>课件上传后统一管理</span></div>
+                <div><b>HTML 托管</b><span>网页课件，随时打开</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ========== 提示 ========== -->
+<div class="hint" id="hint">← → 翻页 · F 全屏 · V 视频</div>
+
+<!-- ========== 工具条：外框左下角 ========== -->
+<div class="bar" id="bar">
+  <button id="prev" aria-label="上一页" title="上一页 (←)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+         stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg>
+  </button>
+  <button id="next" aria-label="下一页" title="下一页 (→)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+         stroke-linecap="round" stroke-linejoin="round"><path d="M9 5 L16 12 L9 19"/></svg>
+  </button>
+  <button id="fs" aria-label="全屏" title="全屏 (F)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 9 V4 H9"/><path d="M20 9 V4 H15"/>
+      <path d="M4 15 V20 H9"/><path d="M20 15 V20 H15"/>
+    </svg>
+  </button>
+  <button id="play" aria-label="播放视频" title="播放视频 (V)">
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 5.6 L18.4 12 L8 18.4 Z"/>
+    </svg>
+  </button>
+  <div class="count"><span id="cur">01</span><i>/</i><span id="tot">06</span></div>
+</div>
+
+<!-- ========== 视频播放层 ========== -->
+<div class="player" id="player" aria-hidden="true">
+  <video id="video" preload="metadata" playsinline></video>
+  <button class="pclose" id="pclose" aria-label="关闭视频" title="关闭 (Esc)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 6 L18 18"/><path d="M18 6 L6 18"/>
+    </svg>
+  </button>
+  <div class="pmiss" id="pmiss">未找到视频文件 firstclass.mp4</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var stage  = document.getElementById('stage');
+  var bar    = document.getElementById('bar');
+  var hint   = document.getElementById('hint');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var prog   = document.getElementById('prog');
+  var curEl  = document.getElementById('cur');
+  var totEl  = document.getElementById('tot');
+  var prevBtn= document.getElementById('prev');
+  var nextBtn= document.getElementById('next');
+  var fsBtn  = document.getElementById('fs');
+  var playBtn= document.getElementById('play');
+  var player = document.getElementById('player');
+  var video  = document.getElementById('video');
+  var pclose = document.getElementById('pclose');
+  var pmiss  = document.getElementById('pmiss');
+
+  var VIDEO_SRC = './firstclass.mp4';
+
+  var SW = 1600, SH = 900;
+  var MX = 16, MT = 10, MB = 52;
+  var K = 1, cur = 0;
+
+  /* ---------- 1. 舞台缩放 ---------- */
+  function fit() {
+    var k = Math.min(
+      (window.innerWidth  - MX * 2) / SW,
+      (window.innerHeight - MT - MB) / SH
+    );
+    k = Math.max(k, 0.1);
+    K = k;
+    stage.style.setProperty('--k', k.toFixed(4));
+    stage.style.setProperty('--ty', ((MT - MB) / 2) + 'px');
+
+    var left = Math.max(MX, Math.round((window.innerWidth - SW * k) / 2));
+    bar.style.left  = left + 'px';
+    hint.style.left = (bar.getBoundingClientRect().right + 32) + 'px';
+  }
+  window.addEventListener('resize', fit);
+  document.addEventListener('fullscreenchange', fit);
+  fit();
+
+  /* ---------- 2. 放大动效（FLIP：真元素自身缩放位移，不做克隆） ----------
+     做法：目标大标题先缩放 + 位移到来源小标题所在位置，再动画回原位。
+     全程只有这一个元素参与，不会出现新旧两个标题的重影。          */
+  function stageBox(el) {
+    var r = el.getBoundingClientRect();
+    var s = stage.getBoundingClientRect();
+    return {
+      x: (r.left - s.left) / K,
+      y: (r.top  - s.top)  / K,
+      w: r.width / K,
+      h: r.height / K
+    };
+  }
+
+  // 文字的真实边界（块级元素的盒模型会被拉满整列，量盒子会失真）
+  function textBox(el) {
+    var rng = document.createRange();
+    rng.selectNodeContents(el);
+    var r = rng.getBoundingClientRect();
+    var s = stage.getBoundingClientRect();
+    return {
+      x: (r.left - s.left) / K,
+      y: (r.top  - s.top)  / K,
+      w: r.width / K,
+      h: r.height / K
+    };
+  }
+
+  var liveNodes = [];   // 处于 morph-live 状态的节点（下次翻页时统一清理）
+
+  function runMorph(srcEl, dstEl, ra, rb) {
+    if (!ra || !rb || !ra.w || !rb.w) return;
+
+    var eb = stageBox(dstEl);  // 目标元素自身的盒子
+    var ox = rb.x - eb.x;      // 文字在元素盒子内的偏移
+    var oy = rb.y - eb.y;
+
+    var k  = ra.w / rb.w;      // 起始缩放：大字缩到和小字一样大
+    var dx = ra.x - rb.x;      // 起点位移：文字左上角对齐来源
+    var dy = ra.y - rb.y;
+
+    // 目标标题：不参与入场动画，避免额外的位移叠加
+    var node = dstEl;
+    while (node && node !== stage) {
+      if (node.classList && node.classList.contains('st')) {
+        node.classList.add('morph-live');
+        liveNodes.push(node);
+      }
+      node = node.parentNode;
+    }
+
+    // 同页其余内容：先藏起来，标题落位后再依次出现
+    var waits = [];
+    Array.prototype.forEach.call(dstEl.closest('.slide').querySelectorAll('.st'), function (e) {
+      if (e === dstEl || e.classList.contains('morph-live')) return;
+      e.classList.add('morph-wait');
+      waits.push(e);
+      liveNodes.push(e);
+    });
+
+    dstEl.style.transformOrigin = ox + 'px ' + oy + 'px';
+
+    var anim = dstEl.animate([
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + k + ')' },
+      { transform: 'translate(0px,0px) scale(1)' }
+    ], { duration: 700, easing: 'cubic-bezier(.22,.61,.24,1)', fill: 'both' });
+
+    anim.onfinish = function () {
+      dstEl.style.transformOrigin = '';
+      anim.cancel();
+      // morph-live / morph-wait 不在这里摘除——
+      // 一摘除 rise 动画会重新触发，标题会闪一下消失再淡入。
+      // 它们由下一次翻页时的统一清理负责。
+    };
+
+    // 标题落位后，其余内容按原节奏依次浮现
+    waits.forEach(function (e, idx) {
+      setTimeout(function () {
+        e.classList.remove('morph-wait');
+        e.style.animationDelay = 'calc(60ms + min(' + (idx + 1) * 30 + 'ms, 180ms))';
+        e.style.animationDuration = '.42s';
+        void e.offsetWidth;   // 强制重排，让 rise 动画重新开始
+      }, 380 + Math.min(idx * 30, 180));
+    });
+  }
+
+  /* ---------- 3. 翻页 ---------- */
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function go(n, dir) {
+    n = Math.max(0, Math.min(slides.length - 1, n));
+    if (n === cur) return;
+    var d = dir != null ? dir : (n > cur ? 1 : -1);
+
+    var from = slides[cur], to = slides[n];
+
+    // 清理上一次动效留下的 morph-live / morph-wait 状态
+    liveNodes.forEach(function (nd) {
+      nd.classList.remove('morph-live');
+      nd.classList.remove('morph-wait');
+      nd.style.animationDelay = '';
+      nd.style.animationDuration = '';
+    });
+    liveNodes = [];
+
+    // 放大动效：两页有同一个 data-morph 标记时，标题飞过去
+    var ma = from.querySelector('[data-morph]');
+    var mb = to.querySelector('[data-morph]');
+    var morph = ma && mb && ma.getAttribute('data-morph') === mb.getAttribute('data-morph');
+
+    // 必须在激活之前测量：激活后入场动画会带来位移
+    var ra = morph ? textBox(ma) : null;
+    var rb = morph ? textBox(mb) : null;
+
+    from.classList.remove('is-active');
+
+    to.style.setProperty('--dx', (morph ? 0 : d * 14) + 'px');
+    void to.offsetWidth;
+    to.classList.add('is-active');
+    to.classList.toggle('morphing', !!morph);
+
+    if (morph) runMorph(ma, mb, ra, rb);
+
+    cur = n;
+    render();
+  }
+
+  function render() {
+    curEl.textContent = pad(cur + 1);
+    totEl.textContent = pad(slides.length);
+    prog.style.width = ((cur + 1) / slides.length * 100) + '%';
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === slides.length - 1;
+
+    curEl.classList.remove('roll');
+    void curEl.offsetWidth;
+    curEl.classList.add('roll');
+  }
+
+  prevBtn.addEventListener('click', function () { go(cur - 1); });
+  nextBtn.addEventListener('click', function () { go(cur + 1); });
+
+  /* ---------- 4. 全屏 ---------- */
+  fsBtn.addEventListener('click', function () {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    }
+  });
+
+  /* ---------- 5. 视频播放 ---------- */
+  function openPlayer() {
+    player.classList.add('on');
+    player.setAttribute('aria-hidden', 'false');
+    if (!video.getAttribute('src')) video.setAttribute('src', VIDEO_SRC);
+
+    var p = video.play();
+    if (p && p.catch) {
+      p.catch(function () {
+        // 文件缺失或浏览器拒绝自动播放：给出提示，不抛错
+        pmiss.classList.add('on');
+      });
+    }
+  }
+
+  function closePlayer() {
+    player.classList.remove('on');
+    player.setAttribute('aria-hidden', 'true');
+    pmiss.classList.remove('on');
+    try { video.pause(); } catch (e) {}
+  }
+
+  playBtn.addEventListener('click', function () {
+    if (player.classList.contains('on')) {
+      closePlayer();
+    } else {
+      openPlayer();
+    }
+  });
+
+  pclose.addEventListener('click', closePlayer);
+
+  // 播放出错（文件不存在）时提示
+  video.addEventListener('error', function () {
+    if (player.classList.contains('on')) pmiss.classList.add('on');
+  });
+  video.addEventListener('loadeddata', function () {
+    pmiss.classList.remove('on');
+  });
+
+  /* ---------- 6. 键盘 ---------- */
+  function hideHint() { hint.classList.add('hide'); }
+
+  document.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ') {
+      e.preventDefault(); hideHint(); go(cur + 1);
+    } else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp') {
+      e.preventDefault(); hideHint(); go(cur - 1);
+    } else if (k === 'Home') {
+      e.preventDefault(); hideHint(); go(0, -1);
+    } else if (k === 'End') {
+      e.preventDefault(); hideHint(); go(slides.length - 1, 1);
+    } else if (k === 'f' || k === 'F') {
+      fsBtn.click();
+    } else if (k === 'v' || k === 'V') {
+      playBtn.click();
+    } else if (k === 'Escape') {
+      // 视频层优先关闭，其次退出全屏
+      if (player.classList.contains('on')) {
+        e.preventDefault(); closePlayer();
+      } else if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    }
+  });
+
+  /* ---------- 6. 初始化 ---------- */
+  slides[0].classList.add('is-active');
+  render();
+  setTimeout(hideHint, 7000);
+})();
+</script>
+</body>
+</html>
