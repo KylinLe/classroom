@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-07T08:46:58Z",
+  "generated_at": "2026-11-07T08:47:17Z",
   "teachers": {
     "lxn": [
       {
@@ -12,10 +12,6 @@
       }
     ],
     "lzy": [
-      {
-        "name": "index.html",
-        "size": 22079
-      },
       {
         "name": "test.html",
         "size": 22079
