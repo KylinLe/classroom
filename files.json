@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-07T08:47:17Z",
+  "generated_at": "2026-11-07T08:47:28Z",
   "teachers": {
     "lxn": [
       {
@@ -9,12 +9,6 @@
       {
         "name": "第一节课.html",
         "size": 37528
-      }
-    ],
-    "lzy": [
-      {
-        "name": "test.html",
-        "size": 22079
       }
     ],
     "swh": [
